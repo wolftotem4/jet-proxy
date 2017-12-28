@@ -86,7 +86,7 @@ class Client
      */
     public function transferHeaders(array $headers)
     {
-        $blacklist = ['server', 'connection'];
+        $blacklist = ['server', 'connection', 'transfer-encoding'];
 
         $sentKeys = [];
         foreach ($headers as $header) {

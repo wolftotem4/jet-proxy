@@ -2,6 +2,15 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-$client = new JetProxy\Client('r88.test', '127.0.0.1');
+$forwarding = [
+    'jet-proxy.test:8080' => ['host' => 'localhost', 'ip' => '127.0.0.1'],
+];
 
-$client->request('/sy2/images/royal88/logo-small.png');
+$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+
+if (isset($forwarding[$host])) {
+    $forwarding = $forwarding[$host];
+
+    $client = new JetProxy\Client($forwarding['host'], $forwarding['ip']);
+    $client->request(get_path_info());
+}
