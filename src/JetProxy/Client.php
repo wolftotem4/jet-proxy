@@ -50,19 +50,9 @@ class Client implements ClientInterface
 
         $request = Request::make($method, $baseUri);
 
-        return $request;
-    }
+        $request->addHeader('Host: ' . $this->host);
 
-    /**
-     * @return array
-     */
-    protected function requestHeaders()
-    {
-        $headers[] = 'Host: ' . $this->host;
-        if (! empty($_COOKIE)) {
-            $headers[] = 'Cookie: ' . http_build_query($_COOKIE, '', '; ', PHP_QUERY_RFC3986);
-        }
-        return $headers;
+        return $request;
     }
 
     /**
@@ -82,6 +72,6 @@ class Client implements ClientInterface
         $uri = '/' . ltrim($uri, '/');
         $port = ($this->port == $this->defaultPort()) ? '' : ':' . $this->port;
 
-        return $this->protocol . '://' . $this->host . $port . $uri;
+        return $this->protocol . '://' . $this->ipAddress . $port . $uri;
     }
 }
