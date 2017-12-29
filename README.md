@@ -4,7 +4,7 @@ An PHP-based proxy, you can use it for web debugging purposes.
 
 ## Installation
 
-```s
+```
 git clone https://github.com/wolftotem4/jet-proxy.git
 cd jet-proxy
 composer install
@@ -34,3 +34,9 @@ $forwarding = [
 php -S localhost:8080 index.php
 ```
 
+### Setting host on command line
+
+```
+# php cli-server [host binding] [target host] [target ip address]
+php cli-server.php localhost:8080 example.com 123.123.123.123
+```
