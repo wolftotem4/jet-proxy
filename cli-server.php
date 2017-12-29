@@ -10,6 +10,7 @@ putenv('JET_PROXY_HOST=' . $argv[2]);
 putenv('JET_PROXY_IP=' . (isset($argv[3]) ? $argv[3] : gethostbyname($argv[2])));
 
 $phpExecutable = (new PhpExecutableFinder)->find(false);
+$serverScript  = __DIR__ . '/server.php';
 
 echo 'Listening on ', $argv[1], PHP_EOL;
-passthru(sprintf('%s -S %s server.php', $phpExecutable, escapeshellarg($argv[1])));
+passthru(sprintf('%s -S %s %s', $phpExecutable, escapeshellarg($argv[1]), escapeshellarg($serverScript)));
