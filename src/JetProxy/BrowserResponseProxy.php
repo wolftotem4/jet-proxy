@@ -10,6 +10,16 @@ class BrowserResponseProxy implements ClientInterface
     protected $client;
 
     /**
+     * @var int|false
+     */
+    protected $contentLength = false;
+
+    /**
+     * @var bool
+     */
+    protected $useChunkedTransfer = false;
+
+    /**
      * BrowserRequestProxy constructor.
      * @param \JetProxy\ClientInterface $client
      */
@@ -28,7 +38,6 @@ class BrowserResponseProxy implements ClientInterface
         $request = $this->client->request($method, $uri);
         $request->getHttpReceiver()->addHeaderListener(function ($httpCode, $header) {
             $this->receiveHeader($httpCode, $header);
-            $this->startChunk();
         })->addBufferListener(function ($data) {
             $this->receiveBody($data);
         })->addEndListener(function () {
@@ -41,27 +50,37 @@ class BrowserResponseProxy implements ClientInterface
      * @param int     $httpCode
      * @param string  $header
      */
-    public function receiveHeader($httpCode, $header)
+    protected function receiveHeader($httpCode, $header)
     {
         if (preg_match('#(*BSR_ANYCRLF)^HTTP/\S+\s.*\R?#', $header, $match)) {
             $header = substr($header, strlen($match[0]));
         }
         $headers = HttpHeaderParser::parse($header);
 
+        $this->contentLength      = $this->contentLength($headers);
+        $this->useChunkedTransfer = (! $this->contentLength);
+
         http_response_code($httpCode);
         $this->transferHeaders($headers);
+        if ($this->useChunkedTransfer) {
+            $this->startChunk();
+        }
     }
 
     /**
      * @param string  $data
      */
-    public function receiveBody($data)
+    protected function receiveBody($data)
     {
-        echo dechex(strlen($data)), "\r\n", $data, "\r\n";
-        flush();
+        if ($this->useChunkedTransfer) {
+            echo dechex(strlen($data)), "\r\n", $data, "\r\n";
+            flush();
+        } else {
+            echo $data;
+        }
     }
 
-    public function startChunk()
+    protected function startChunk()
     {
         while (ob_get_level()) {
             ob_end_clean();
@@ -69,7 +88,7 @@ class BrowserResponseProxy implements ClientInterface
         header('Transfer-Encoding: chunked');
     }
 
-    public function endChunk()
+    protected function endChunk()
     {
         echo "0\r\n\r\n";
     }
@@ -95,5 +114,19 @@ class BrowserResponseProxy implements ClientInterface
                 $sentKeys[] = $key;
             }
         }
+    }
+
+    /**
+     * @param  array  $headers
+     * @return int|false
+     */
+    private function contentLength(array $headers)
+    {
+        foreach ($headers as $header) {
+            if (strtolower($header['key']) == 'content-length') {
+                return intval($header['value']);
+            }
+        }
+        return false;
     }
 }
