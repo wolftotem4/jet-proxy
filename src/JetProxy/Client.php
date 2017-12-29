@@ -2,7 +2,7 @@
 
 namespace JetProxy;
 
-class Client
+class Client implements ClientInterface
 {
     /**
      * @var string
@@ -39,68 +39,49 @@ class Client
         $this->port      = $port ?: $this->defaultPort();
     }
 
-    public function request($uri)
+    /**
+     * @param  string  $method
+     * @param  string  $uri
+     * @return \JetProxy\Request
+     */
+    public function request($method, $uri)
     {
         $baseUri = $this->buildBaseUri($uri);
 
-        $httpReceiver = new CurlHttpReceiver();
-        $httpReceiver->addHeaderListener(function ($header) {
-            if (preg_match('#(*BSR_ANYCRLF)^HTTP/\S+\s.*\R?#', $header, $match)) {
-                $header = substr($header, strlen($match[0]));
-            }
-            $headers = HttpHeaderParser::parse($header);
+        $request = Request::make($method, $baseUri);
 
-//            header('Content-Type: text/plain; charset=utf-8');
-//            print_r($headers);
-            $this->transferHeaders($headers);
-        })->addBufferListener(function ($data) {
-            echo $data;
-        });
-
-        $ch = curl_init($baseUri);
-
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Host: ' . $this->host]);
-        $httpReceiver->setCurl($ch);
-
-        curl_exec($ch);
-
-
-        curl_close($ch);
+        return $request;
     }
 
+    /**
+     * @return array
+     */
+    protected function requestHeaders()
+    {
+        $headers[] = 'Host: ' . $this->host;
+        if (! empty($_COOKIE)) {
+            $headers[] = 'Cookie: ' . http_build_query($_COOKIE, '', '; ', PHP_QUERY_RFC3986);
+        }
+        return $headers;
+    }
+
+    /**
+     * @return int
+     */
     protected function defaultPort()
     {
         return ($this->protocol == 'https') ? 443 : 80;
     }
 
+    /**
+     * @param  string  $uri
+     * @return string
+     */
     protected function buildBaseUri($uri)
     {
         $uri = '/' . ltrim($uri, '/');
         $port = ($this->port == $this->defaultPort()) ? '' : ':' . $this->port;
 
         return $this->protocol . '://' . $this->host . $port . $uri;
-    }
-
-    /**
-     * @param array $headers
-     */
-    public function transferHeaders(array $headers)
-    {
-        $blacklist = ['server', 'connection', 'transfer-encoding'];
-
-        $sentKeys = [];
-        foreach ($headers as $header) {
-            $key = strtolower($header['key']);
-            $sending = $header['key'] . ': ' . $header['value'];
-
-            if (in_array($key, $blacklist)) {
-                continue;
-            } elseif (in_array($key, $sentKeys)) {
-                header($sending, false);
-            } else {
-                header($sending);
-                $sentKeys[] = $key;
-            }
-        }
     }
 }

@@ -22,6 +22,11 @@ class CurlHttpReceiver
     protected $contentBufferListeners = [];
 
     /**
+     * @var array
+     */
+    protected $endTransmissionListeners = [];
+
+    /**
      * @var bool
      */
     protected $headerEOL = false;
@@ -57,10 +62,38 @@ class CurlHttpReceiver
     {
         if (! $this->headerEOL) {
             $this->headerEOL = true;
-            $this->triggerHeaderEvent($this->bufferedHeader);
+            $this->headerReceived($ch);
         }
         $this->triggerBufferListener($data);
         return strlen($data);
+    }
+
+    /**
+     * @param  resource  $ch
+     * @return $this
+     */
+    public function finish($ch)
+    {
+        if (! $this->headerEOL) {
+            $this->headerEOL = true;
+            $this->headerReceived($ch);
+        }
+
+        $this->triggerEndTransmission();
+
+        return $this;
+    }
+
+    /**
+     * @param  resource  $ch
+     * @return $this
+     */
+    protected function headerReceived($ch)
+    {
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $this->triggerHeaderEvent($this->bufferedHeader, $httpCode);
+
+        return $this;
     }
 
     /**
@@ -84,13 +117,24 @@ class CurlHttpReceiver
     }
 
     /**
-     * @param  string  $header
+     * @param  \Closure  $closure
      * @return $this
      */
-    protected function triggerHeaderEvent($header)
+    public function addEndListener(Closure $closure)
+    {
+        $this->endTransmissionListeners[] = $closure;
+        return $this;
+    }
+
+    /**
+     * @param  string  $header
+     * @param  int     $httpCode
+     * @return $this
+     */
+    protected function triggerHeaderEvent($header, $httpCode)
     {
         foreach ($this->headerListeners as $listener) {
-            $listener($header);
+            $listener($httpCode, $header);
         }
         return $this;
     }
@@ -103,6 +147,17 @@ class CurlHttpReceiver
     {
         foreach ($this->contentBufferListeners as $listener) {
             $listener($data);
+        }
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function triggerEndTransmission()
+    {
+        foreach ($this->endTransmissionListeners as $listener) {
+            $listener();
         }
         return $this;
     }
