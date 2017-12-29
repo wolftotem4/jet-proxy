@@ -23,7 +23,7 @@ $forwarding = [
   
     // You can disguise as an actual website.  (Please don't do anything evil.)
     // Don't forget you need to set up `/etc/hosts` (Linux)
-  	// or '%systemroot%\System32\drivers\etc\hosts' (Windows).
+    // or '%systemroot%\System32\drivers\etc\hosts' (Windows).
     'example.com' => ['host' => 'example.com', 'ip' => '123.123.123.123'],
 ];
 ```
