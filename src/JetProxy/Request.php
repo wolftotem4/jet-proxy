@@ -89,6 +89,8 @@ class Request
 
     /**
      * @return $this
+     *
+     * @throws \JetProxy\ClientRequestErrorException
      */
     public function run()
     {
@@ -98,6 +100,10 @@ class Request
         }
 
         curl_exec($this->curl);
+
+        if ($errno = curl_errno($this->curl)) {
+            throw new ClientRequestErrorException(curl_error($this->curl), $errno);
+        }
 
         $this->httpReceiver->finish($this->curl);
 

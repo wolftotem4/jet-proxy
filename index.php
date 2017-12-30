@@ -19,5 +19,11 @@ if (isset($forwarding[$host])) {
     $forwarding = $forwarding[$host];
 
     $client = \JetProxy\ClientFactory::make()->browserProxy($forwarding['host'], $forwarding['ip']);
-    $client->request($method, get_path_info())->run();
+    try {
+        $client->request($method, get_path_info())->run();
+    } catch (\JetProxy\ClientRequestErrorException $e) {
+        http_response_code(500);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo $e->getMessage();
+    }
 }
