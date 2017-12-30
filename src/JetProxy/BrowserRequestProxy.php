@@ -28,22 +28,10 @@ class BrowserRequestProxy implements ClientInterface
         $request = $this->client->request($method, $uri);
 
         (! empty($_POST)) and $request->setPost($_POST);
-        (! empty($_COOKIE)) and $request->addHeader('Cookie: ' . $this->cookieString());
 
-        $headerKeys = [
-            'HTTP_ACCEPT'           => 'Accept',
-            'HTTP_ACCEPT_CHARSET'   => 'Accept-Charset',
-            'HTTP_ACCEPT_LANGUAGE'  => 'Accept-Language',
-            'HTTP_CACHE_CONTROL'    => 'Cache-Control',
-            'HTTP_IF_NONE_MATCH'    => 'If-None-Match',
-            'HTTP_PRAGMA'           => 'Pragma',
-            'HTTP_REFERER'          => 'Referer',
-            'HTTP_USER_AGENT'       => 'User-Agent',
-            'HTTP_X_REQUESTED_WITH' => 'X-Requested-With',
-        ];
-        foreach ($headerKeys as $sKey => $key) {
-            if (! empty($_SERVER[$sKey])) {
-                $request->addHeader($key . ': ' . $_SERVER[$sKey]);
+        foreach (getallheaders() as $key => $value) {
+            if (! in_array(strtolower($key), ['connection', 'accept-encoding', 'host'])) {
+                $request->addHeader($key . ': ' . $value);
             }
         }
 
