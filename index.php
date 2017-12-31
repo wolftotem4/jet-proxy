@@ -26,4 +26,6 @@ if (isset($forwarding[$host])) {
         header('Content-Type: text/plain; charset=utf-8');
         echo $e->getMessage();
     }
+} else {
+    http_response_code(404);
 }
