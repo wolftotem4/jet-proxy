@@ -25,6 +25,11 @@ class Client implements ClientInterface
     protected $port;
 
     /**
+     * @var \JetProxy\TransmissionHandler|null
+     */
+    protected $transmissionHandler = null;
+
+    /**
      * Client constructor.
      * @param $host
      * @param string|null  $ipAddress
@@ -40,6 +45,16 @@ class Client implements ClientInterface
     }
 
     /**
+     * @param  \JetProxy\TransmissionHandler  $transmissionHandler
+     * @return $this
+     */
+    public function setTransmissionHandler(TransmissionHandler $transmissionHandler)
+    {
+        $this->transmissionHandler = $transmissionHandler;
+        return $this;
+    }
+
+    /**
      * @param  string  $method
      * @param  string  $uri
      * @return \JetProxy\Request
@@ -48,7 +63,7 @@ class Client implements ClientInterface
     {
         $baseUri = $this->buildBaseUri($uri);
 
-        $request = Request::make($method, $baseUri);
+        $request = Request::make($method, $baseUri, $this->transmissionHandler);
 
         $request->addHeader('Host: ' . $this->host);
 

@@ -4,7 +4,7 @@ namespace JetProxy;
 
 use Closure;
 
-class CurlHttpReceiver
+class CurlHttpReceiver implements TransmissionHandler
 {
     /**
      * @var string

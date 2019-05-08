@@ -12,7 +12,7 @@ class Request
     protected $curl;
 
     /**
-     * @var \JetProxy\CurlHttpReceiver
+     * @var \JetProxy\TransmissionHandler
      */
     protected $httpReceiver;
 
@@ -30,11 +30,14 @@ class Request
      * Request constructor.
      * @param string   $method
      * @param resource $curl
+     * @param \JetProxy\TransmissionHandler|null $handler
      */
-    public function __construct($method, $curl)
+    public function __construct($method, $curl, TransmissionHandler $handler = null)
     {
         $this->curl         = $curl;
-        $this->httpReceiver = (new CurlHttpReceiver())->setCurl($curl);
+        $this->httpReceiver = $handler ?: new CurlHttpReceiver();
+
+        $this->httpReceiver->setCurl($curl);
 
         $this->setRequestMethod($method);
     }
@@ -42,11 +45,12 @@ class Request
     /**
      * @param  string  $method
      * @param  string  $url
+     * @param  \JetProxy\TransmissionHandler|null  $handler
      * @return static
      */
-    public static function make($method, $url)
+    public static function make($method, $url, $handler = null)
     {
-        return new static($method, curl_init($url));
+        return new static($method, curl_init($url), $handler);
     }
 
     /**
@@ -60,11 +64,21 @@ class Request
     }
 
     /**
-     * @return \JetProxy\CurlHttpReceiver
+     * @return \JetProxy\TransmissionHandler
+     */
+    public function getTransmissionHandler()
+    {
+        return $this->httpReceiver;
+    }
+
+    /**
+     * @return \JetProxy\TransmissionHandler
+     *
+     * @deprecated
      */
     public function getHttpReceiver()
     {
-        return $this->httpReceiver;
+        return $this->getTransmissionHandler();
     }
 
     /**

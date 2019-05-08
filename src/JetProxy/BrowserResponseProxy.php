@@ -36,7 +36,7 @@ class BrowserResponseProxy implements ClientInterface
     public function request($method, $uri)
     {
         $request = $this->client->request($method, $uri);
-        $request->getHttpReceiver()->addHeaderListener(function ($httpCode, $header) {
+        $request->getTransmissionHandler()->addHeaderListener(function ($httpCode, $header) {
             $this->receiveHeader($httpCode, $header);
         })->addBufferListener(function ($data) {
             $this->receiveBody($data);

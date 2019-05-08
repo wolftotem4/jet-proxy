@@ -47,7 +47,7 @@ class ContentDownloaderProxy implements ClientInterface
         $request = $this->client->request($method, $uri);
         $this->downloader = $this->createContentDownloader();
 
-        $request->getHttpReceiver()->addBufferListener(function ($content) {
+        $request->getTransmissionHandler()->addBufferListener(function ($content) {
             $this->downloader->write($content);
         })->addEndListener(function () {
             $this->downloader->finish();
