@@ -65,13 +65,4 @@ class BrowserRequestProxy implements ClientInterface
             }
         }
     }
-
-    /**
-     * @return bool
-     */
-    protected function isJsonContentType()
-    {
-        $contentType = $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
-        return strpos($contentType, 'application/json') !== false;
-    }
 }
