@@ -27,22 +27,51 @@ class BrowserRequestProxy implements ClientInterface
     {
         $request = $this->client->request($method, $uri);
 
-        (! empty($_POST)) and $request->setPost($_POST);
+        $this->setRequestPost($request);
 
-        foreach (getallheaders() as $key => $value) {
-            if (! in_array(strtolower($key), ['connection', 'accept-encoding', 'host'])) {
-                $request->addHeader($key . ': ' . $value);
-            }
-        }
+        $this->setRequestHeaders($request);
 
         return $request;
     }
 
     /**
-     * @return string
+     * @return array|string
      */
-    private function cookieString()
+    protected function getPostFromClient()
     {
-        return http_build_query($_COOKIE, '', '; ', PHP_QUERY_RFC3986);
+        if (! empty($_POST)) {
+            return $_POST;
+        } else {
+            return file_get_contents('php://input');
+        }
+    }
+
+    /**
+     * @param \JetProxy\Request  $request
+     */
+    protected function setRequestPost(Request $request)
+    {
+        $request->setPost($this->getPostFromClient());
+    }
+
+    /**
+     * @param \JetProxy\Request $request
+     */
+    protected function setRequestHeaders(Request $request)
+    {
+        foreach (getallheaders() as $key => $value) {
+            if (! in_array(strtolower($key), ['connection', 'accept-encoding', 'host'])) {
+                $request->addHeader($key . ': ' . $value);
+            }
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isJsonContentType()
+    {
+        $contentType = $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+        return strpos($contentType, 'application/json') !== false;
     }
 }

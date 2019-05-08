@@ -22,9 +22,9 @@ class Request
     protected $headers = [];
 
     /**
-     * @var array
+     * @var string
      */
-    protected $post = [];
+    protected $post = null;
 
     /**
      * Request constructor.
@@ -68,12 +68,38 @@ class Request
     }
 
     /**
-     * @param  array  $post
+     * @return string|null
+     */
+    public function getPost()
+    {
+        return $this->post;
+    }
+
+    /**
+     * @param  array|string|null  $post
      * @return $this
      */
-    public function setPost(array $post)
+    public function setPost($post)
     {
-        $this->post = $post;
+        $this->post = is_array($post) ? http_build_query($this->post, '', '&') : $post;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getHeaders()
+    {
+        return $this->headers;
+    }
+
+    /**
+     * @param  array  $headers
+     * @return $this
+     */
+    public function setHeaders(array $headers)
+    {
+        $this->headers = $headers;
         return $this;
     }
 
@@ -95,8 +121,8 @@ class Request
     public function run()
     {
         curl_setopt($this->curl, CURLOPT_HTTPHEADER, $this->headers);
-        if (! empty($this->post)) {
-            curl_setopt($this->curl, CURLOPT_POSTFIELDS, http_build_query($this->post, '', '&'));
+        if (! $this->emptyBody($this->post)) {
+            curl_setopt($this->curl, CURLOPT_POSTFIELDS, $this->post);
         }
 
         curl_exec($this->curl);
@@ -110,6 +136,15 @@ class Request
         curl_close($this->curl);
 
         return $this;
+    }
+
+    /**
+     * @param  mixed  $body
+     * @return bool
+     */
+    protected function emptyBody($body)
+    {
+        return $body === null || $body === false || $body === '';
     }
 
     /**
