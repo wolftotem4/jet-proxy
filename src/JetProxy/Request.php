@@ -95,7 +95,7 @@ class Request
      */
     public function setPost($post)
     {
-        $this->post = is_array($post) ? http_build_query($this->post, '', '&') : $post;
+        $this->post = is_array($post) ? http_build_query($post, '', '&') : $post;
         return $this;
     }
 
