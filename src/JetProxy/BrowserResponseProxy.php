@@ -41,7 +41,9 @@ class BrowserResponseProxy implements ClientInterface
         })->addBufferListener(function ($data) {
             $this->receiveBody($data);
         })->addEndListener(function () {
-            $this->endChunk();
+            if ($this->useChunkedTransfer) {
+                $this->endChunk();
+            }
         });
         return $request;
     }
@@ -58,7 +60,7 @@ class BrowserResponseProxy implements ClientInterface
         $headers = HttpHeaderParser::parse($header);
 
         $this->contentLength      = $this->contentLength($headers);
-        $this->useChunkedTransfer = (! $this->contentLength);
+        $this->useChunkedTransfer = (! $this->contentLength) && php_sapi_name() != 'fpm-fcgi';
 
         http_response_code($httpCode);
         $this->transferHeaders($headers);
